@@ -11,8 +11,9 @@ struct ContentView: View {
     var body: some View {
         NavigationView {
             ZStack {
-                LinearGradient(colors: [.red, .white], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    .ignoresSafeArea()
+                LinearGradient(gradient: Gradient(colors: [Color.blue.opacity(0.8), Color.purple.opacity(0.8)]), startPoint: .top, endPoint: .bottom)
+                    .edgesIgnoringSafeArea(.all)
+                
                 VStack {
                     Spacer()
                     Text("Memory Master")
@@ -21,20 +22,31 @@ struct ContentView: View {
                     Spacer()
                     
                     NavigationLink(destination: instructionsView()) {
-                        Text("Start Game")
+                        Text("Instructions")
                             .padding()
-                            .background(Color.pink)
+                            .background(Color.purple)
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
+                    
+                    NavigationLink(destination: gameView()) {
+                        Text("Start Game")
+                            .padding()
+                            .background(Color.purple)
+                            .foregroundColor(.white)
+                            .cornerRadius(10)
+                    }
+                    .padding(.top, 20)
+                    
                     Spacer()
-
                 }
                 .padding()
             }
             .navigationTitle("Title Screen")
+            .accentColor(.white)
             .toolbar(.hidden, for: .navigationBar)
         }
+        .accentColor(.white)
     }
 }
 
