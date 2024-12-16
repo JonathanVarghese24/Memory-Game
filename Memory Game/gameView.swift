@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct gameView: View {
     @State private var cards = [
@@ -24,6 +25,9 @@ struct gameView: View {
     @State private var player2Score = 0
     @State private var currentPlayer = 1
     
+    @State private var matchSound: AVAudioPlayer?
+    @State private var noMatchSound: AVAudioPlayer?
+    
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
@@ -39,7 +43,7 @@ struct gameView: View {
             VStack {
                 Text("Player \(currentPlayer)'s Turn")
                     .font(.title)
-                    .foregroundColor(.white) // White text color
+                    .foregroundColor(.white)
                     .padding()
                     .fontWeight(.heavy)
                 
@@ -59,24 +63,44 @@ struct gameView: View {
                     VStack {
                         Text("Player 1")
                             .font(.headline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                         Text("Score: \(player1Score)")
                             .font(.subheadline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                     }
                     .padding()
                     
                     VStack {
                         Text("Player 2")
                             .font(.headline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                         Text("Score: \(player2Score)")
                             .font(.subheadline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                     }
                     .padding()
                 }
             }
+        }
+        .onAppear {
+            setupAudioPlayers()
+        }
+    }
+    
+    func setupAudioPlayers() {
+        guard let matchSoundURL = Bundle.main.url(forResource: "match", withExtension: "mp3"),
+              let noMatchSoundURL = Bundle.main.url(forResource: "noMatch", withExtension: "mp3") else {
+            print("Failed to find sound files")
+            return
+        }
+        
+        do {
+            matchSound = try AVAudioPlayer(contentsOf: matchSoundURL)
+            noMatchSound = try AVAudioPlayer(contentsOf: noMatchSoundURL)
+            matchSound?.prepareToPlay()
+            noMatchSound?.prepareToPlay()
+        } catch {
+            print("Failed to initialize audio players: \(error)")
         }
     }
     
@@ -104,6 +128,9 @@ struct gameView: View {
             cards[selectedCardIndices[0]].isMatched = true
             cards[selectedCardIndices[1]].isMatched = true
             
+            // Play match sound
+            matchSound?.play()
+            
             // Increment score for current player
             if currentPlayer == 1 {
                 player1Score += 1
@@ -113,6 +140,9 @@ struct gameView: View {
         } else {
             cards[selectedCardIndices[0]].isFaceUp = false
             cards[selectedCardIndices[1]].isFaceUp = false
+            
+            // Play no match sound
+            noMatchSound?.play()
             
             currentPlayer = currentPlayer == 1 ? 2 : 1
         }
