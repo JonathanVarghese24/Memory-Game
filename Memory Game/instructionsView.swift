@@ -28,10 +28,8 @@ struct instructionsView: View {
                     Text("its time to switch players")
                         .font(.system(size: 25, weight: .heavy))
                         .foregroundColor(.white)
-                    
                     Spacer()
                 }
-                .padding()
             }
         }
         
@@ -40,3 +38,4 @@ struct instructionsView: View {
 #Preview {
     instructionsView()
 }
+
