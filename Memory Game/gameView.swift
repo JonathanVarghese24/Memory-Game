@@ -23,6 +23,8 @@ struct gameView: View {
     @State private var player1Score = 0
     @State private var player2Score = 0
     @State private var currentPlayer = 1
+    @State private var showingEndGameAlert = false
+    @State private var winnerMessage = ""
     
     let columns = [
         GridItem(.flexible()),
@@ -39,8 +41,9 @@ struct gameView: View {
             VStack {
                 Text("Player \(currentPlayer)'s Turn")
                     .font(.title)
-                    .foregroundColor(.white) // White text color
+                    .foregroundColor(.white)
                     .padding()
+                    .fontWeight(.heavy)
                 
                 LazyVGrid(columns: columns, spacing: 10) {
                     ForEach(cards) { card in
@@ -58,24 +61,33 @@ struct gameView: View {
                     VStack {
                         Text("Player 1")
                             .font(.headline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                         Text("Score: \(player1Score)")
                             .font(.subheadline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                     }
                     .padding()
                     
                     VStack {
                         Text("Player 2")
                             .font(.headline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                         Text("Score: \(player2Score)")
                             .font(.subheadline)
-                            .foregroundColor(.white) // White text color
+                            .foregroundColor(.white)
                     }
                     .padding()
                 }
             }
+        }
+        .alert(isPresented: $showingEndGameAlert) {
+            Alert(
+                title: Text("Game Over"),
+                message: Text(winnerMessage),
+                dismissButton: .default(Text("New Game")) {
+                    resetGame()
+                }
+            )
         }
     }
     
@@ -103,11 +115,14 @@ struct gameView: View {
             cards[selectedCardIndices[0]].isMatched = true
             cards[selectedCardIndices[1]].isMatched = true
             
-            // Increment score for current player
             if currentPlayer == 1 {
                 player1Score += 1
             } else {
                 player2Score += 1
+            }
+            
+            if cards.allSatisfy({ $0.isMatched }) {
+                endGame()
             }
         } else {
             cards[selectedCardIndices[0]].isFaceUp = false
@@ -116,6 +131,29 @@ struct gameView: View {
             currentPlayer = currentPlayer == 1 ? 2 : 1
         }
         
+        selectedCards.removeAll()
+    }
+    
+    func endGame() {
+        if player1Score > player2Score {
+            winnerMessage = "Player 1 wins with \(player1Score) points!"
+        } else if player2Score > player1Score {
+            winnerMessage = "Player 2 wins with \(player2Score) points!"
+        } else {
+            winnerMessage = "It's a tie! Both players scored \(player1Score) points."
+        }
+        showingEndGameAlert = true
+    }
+    
+    func resetGame() {
+        cards.shuffle()
+        for i in cards.indices {
+            cards[i].isFaceUp = false
+            cards[i].isMatched = false
+        }
+        player1Score = 0
+        player2Score = 0
+        currentPlayer = 1
         selectedCards.removeAll()
     }
 }

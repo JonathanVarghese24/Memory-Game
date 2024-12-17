@@ -38,4 +38,3 @@ struct instructionsView: View {
 #Preview {
     instructionsView()
 }
-
