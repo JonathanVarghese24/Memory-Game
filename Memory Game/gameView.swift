@@ -6,10 +6,12 @@
 //
 
 import SwiftUI
+import AVFoundation
 
 struct gameView: View {
+    
+    //defines cards with their match
     @State private var cards = [
-        // create cards with image names and shuffle them
         Card(imageName: "image1"), Card(imageName: "image1"),
         Card(imageName: "image2"), Card(imageName: "image2"),
         Card(imageName: "image3"), Card(imageName: "image3"),
@@ -26,10 +28,12 @@ struct gameView: View {
     @State private var currentPlayer = 1
     @State private var showingEndGameAlert = false
     @State private var winnerMessage = ""
-    @State private var attempts = 0 // Counter for attempts
+    @State private var attempts = 0
+    
+    @State private var matchSound: AVAudioPlayer?
+    @State private var noMatchSound: AVAudioPlayer?
     
     let columns = [
-        // create grid layout
         GridItem(.flexible()),
         GridItem(.flexible()),
         GridItem(.flexible()),
@@ -92,17 +96,37 @@ struct gameView: View {
                 }
             )
         }
+        .onAppear {
+            setupAudioPlayers()
+        }
     }
-    // function to make tapping card on screen work
+    
+    func setupAudioPlayers() {
+        guard let matchSoundURL = Bundle.main.url(forResource: "match", withExtension: "mp3"),
+              let noMatchSoundURL = Bundle.main.url(forResource: "noMatch", withExtension: "mp3") else {
+            print("Failed to find sound files")
+            return
+        }
+        
+        do {
+            matchSound = try AVAudioPlayer(contentsOf: matchSoundURL)
+            noMatchSound = try AVAudioPlayer(contentsOf: noMatchSoundURL)
+            matchSound?.prepareToPlay()
+            noMatchSound?.prepareToPlay()
+        } catch {
+            print("Failed to initialize audio players: \(error)")
+        }
+    }
+    
     func tapCard(_ card: Card) {
         if let index = cards.firstIndex(where: { $0.id == card.id }),
-           !cards[index].isFaceUp, //makes sure card isnt already flipped
-           !cards[index].isMatched, //makes sure that card doesnt already have a match
+           !cards[index].isFaceUp,
+           !cards[index].isMatched,
            selectedCards.count < 2 {
             
             cards[index].isFaceUp = true
             selectedCards.append(card.id)
-
+            
             attempts += 1
             
             if selectedCards.count == 2 {
@@ -113,20 +137,21 @@ struct gameView: View {
         }
     }
     
-    func checkForMatch() { //checks value of card, and checks if the value of the two cards are the same
+    func checkForMatch() {
         let selectedCardIndices = cards.indices.filter { selectedCards.contains(cards[$0].id) }
         
         if cards[selectedCardIndices[0]].imageName == cards[selectedCardIndices[1]].imageName {
             cards[selectedCardIndices[0]].isMatched = true
             cards[selectedCardIndices[1]].isMatched = true
             
+            matchSound?.play()
+            
             if currentPlayer == 1 {
                 player1Score += 1
             } else {
                 player2Score += 1
             }
-
-            // Check if all cards are matched
+            
             if cards.allSatisfy({ $0.isMatched }) {
                 endGame()
             }
@@ -134,25 +159,25 @@ struct gameView: View {
             cards[selectedCardIndices[0]].isFaceUp = false
             cards[selectedCardIndices[1]].isFaceUp = false
             
+            noMatchSound?.play()
+            
             currentPlayer = currentPlayer == 1 ? 2 : 1
         }
         
         selectedCards.removeAll()
     }
     
-    // finishes game, checks to see who had more points and sends alert to show who wins
     func endGame() {
         if player1Score > player2Score {
-            winnerMessage = "Player 1 wins with \(player1Score) points! Total tries: \(attempts)"
+            winnerMessage = "Player 1 wins! Cards Flipped: \(attempts)"
         } else if player2Score > player1Score {
-            winnerMessage = "Player 2 wins with \(player2Score) points! Total tries: \(attempts)"
+            winnerMessage = "Player 2 wins! Cards Flipped: \(attempts)"
         } else {
-            winnerMessage = "It's a tie! Both players scored \(player1Score) points. Total tries: \(attempts)"
+            winnerMessage = "It's a tie! Cards Flipped: \(attempts)"
         }
         showingEndGameAlert = true
     }
     
-    //resets all stats
     func resetGame() {
         cards.shuffle()
         for i in cards.indices {
@@ -167,8 +192,6 @@ struct gameView: View {
     }
 }
 
-
-// makes cards/puts images on cards
 struct CardView: View {
     let card: Card
     
